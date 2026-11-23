@@ -17,8 +17,9 @@ hashrate and share counts from XMRig's own local HTTP API.
 | `vendor/xmrig` | XMRig v6.27.0 source (GPL-3.0), pinned as the mining engine |
 | `vendor/xmrig-build` | Local build output for the ARM64 engine (not committed) |
 | `scripts/` | Reproducible build scripts |
-| `backend/` | Management API (planned) |
-| `dashboard/` | Web dashboard (planned) |
+| `backend/` | Working self-hosted management API + SQLite database |
+| `dashboard/` | Working dark web dashboard for fleet monitoring |
+| `docs/DASHBOARD.md` | How to run the dashboard and connect devices |
 | `docs/` | Architecture, licensing, security, configuration and launch documentation |
 
 ## Design commitments

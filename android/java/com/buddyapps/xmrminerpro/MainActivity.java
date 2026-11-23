@@ -37,6 +37,10 @@ public class MainActivity extends Activity {
     private EditText workerField;
     private EditText threadsField;
     private EditText tempField;
+    private EditText mgmtUrlField;
+    private EditText deviceIdField;
+    private EditText deviceTokenField;
+    private TextView mgmtHint;
     private CheckBox chargingOnly;
     private TextView statsView;
     private TextView errorView;
@@ -48,6 +52,8 @@ public class MainActivity extends Activity {
             errorView.setText(settings.engineError());
             String log = settings.log();
             logView.setText(log.length() > 2500 ? log.substring(log.length() - 2500) : log);
+            String mgmt = settings.managementStatus();
+            mgmtHint.setText(mgmt.isEmpty() ? "Dashboard: not configured" : mgmt);
             handler.postDelayed(this, 1000);
         }
     };
@@ -114,6 +120,24 @@ public class MainActivity extends Activity {
         root.addView(chargingOnly);
         root.addView(note("Mining stops automatically if the device gets hot, the battery drops below 20% " +
                 "(when unplugged), or you press Stop."));
+
+        root.addView(section("Fleet management (optional)"));
+        root.addView(note("Register this device in your dashboard, then paste its server URL, ID and token here. " +
+                "Only mining statistics are sent — never wallet keys or seed phrases."));
+        mgmtUrlField = field("https://your-server:8787");
+        mgmtUrlField.setText(settings.managementUrl());
+        root.addView(label("Dashboard server URL"));
+        root.addView(mgmtUrlField);
+        deviceIdField = field("16-character device ID");
+        deviceIdField.setText(settings.deviceId());
+        root.addView(label("Device ID"));
+        root.addView(deviceIdField);
+        deviceTokenField = field("Device token");
+        deviceTokenField.setText(settings.deviceToken());
+        root.addView(label("Device token"));
+        root.addView(deviceTokenField);
+        mgmtHint = note("");
+        root.addView(mgmtHint);
 
         LinearLayout buttons = new LinearLayout(this);
         buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -192,6 +216,22 @@ public class MainActivity extends Activity {
         settings.threads(threads);
         settings.tempLimit(temp);
         settings.chargingOnly(chargingOnly.isChecked());
+
+        String mgmtUrl = mgmtUrlField.getText().toString().trim();
+        String deviceId = deviceIdField.getText().toString().trim();
+        String deviceToken = deviceTokenField.getText().toString().trim();
+        if (!mgmtUrl.isEmpty() || !deviceId.isEmpty() || !deviceToken.isEmpty()) {
+            if (!Settings.validManagementUrl(mgmtUrl) || !deviceId.matches("[a-f0-9]{16}")
+                    || deviceToken.length() < 20) {
+                Toast.makeText(this, "Dashboard needs a full URL, a 16-character ID and the device token",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+        settings.managementUrl(mgmtUrl);
+        settings.deviceId(deviceId);
+        settings.deviceToken(deviceToken);
+        settings.managementStatus("");
 
         Intent i = new Intent(this, MiningService.class);
         i.setAction(MiningService.ACTION_START);

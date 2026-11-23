@@ -27,6 +27,7 @@ public class MiningService extends Service {
 
     private XmrigController controller;
     private Settings settings;
+    private TelemetryReporter reporter;
     private final Handler handler = new Handler();
     private final Runnable ticker = new Runnable() {
         @Override public void run() {
@@ -79,6 +80,13 @@ public class MiningService extends Service {
         try {
             controller.start();
             stopReason = "";
+            if (settings.telemetryEnabled()) {
+                reporter = new TelemetryReporter(settings);
+                reporter.update(controller.sample(), batteryPercent, charging);
+                reporter.start();
+            } else {
+                settings.managementStatus("Dashboard: not configured");
+            }
             handler.post(ticker);
             updateNotification("Connecting…");
         } catch (Exception e) {
@@ -96,6 +104,7 @@ public class MiningService extends Service {
         settings.stats(s);
         settings.engineError(controller.lastError());
         settings.log(controller.log());
+        if (reporter != null) reporter.update(controller.sample(), batteryPercent, charging);
         String first = s.split("\\n")[0];
         updateNotification(first);
 
@@ -134,6 +143,10 @@ public class MiningService extends Service {
 
     private void stopMining(String reason) {
         handler.removeCallbacks(ticker);
+        if (reporter != null) {
+            reporter.stop();
+            reporter = null;
+        }
         if (controller != null) controller.stop();
         stopReason = reason;
         settings.stats("Stopped: " + reason);
@@ -181,6 +194,10 @@ public class MiningService extends Service {
 
     @Override public void onDestroy() {
         handler.removeCallbacks(ticker);
+        if (reporter != null) {
+            reporter.stop();
+            reporter = null;
+        }
         if (controller != null) controller.stop();
         try { unregisterReceiver(batteryReceiver); } catch (IllegalArgumentException ignored) {}
         super.onDestroy();

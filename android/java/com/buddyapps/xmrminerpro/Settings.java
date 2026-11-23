@@ -17,6 +17,10 @@ final class Settings {
     private static final String K_STATS = "stats_text";
     private static final String K_LOG = "log_text";
     private static final String K_ERROR = "engine_error";
+    private static final String K_MGMT_URL = "mgmt_url";
+    private static final String K_DEVICE_ID = "device_id";
+    private static final String K_DEVICE_TOKEN = "device_token";
+    private static final String K_MGMT_STATUS = "mgmt_status";
 
     private final SharedPreferences p;
 
@@ -46,6 +50,38 @@ final class Settings {
 
     String engineError() { return p.getString(K_ERROR, ""); }
     void engineError(String v) { put(K_ERROR, v); }
+
+    String managementUrl() { return p.getString(K_MGMT_URL, ""); }
+    String deviceId()       { return p.getString(K_DEVICE_ID, ""); }
+    String deviceToken()    { return p.getString(K_DEVICE_TOKEN, ""); }
+    void managementUrl(String v) { put(K_MGMT_URL, v); }
+    void deviceId(String v)      { put(K_DEVICE_ID, v); }
+    void deviceToken(String v)   { put(K_DEVICE_TOKEN, v); }
+
+    String managementStatus() { return p.getString(K_MGMT_STATUS, ""); }
+    void managementStatus(String v) { put(K_MGMT_STATUS, v); }
+
+    boolean telemetryEnabled() {
+        return validManagementUrl(managementUrl())
+                && deviceId().matches("[a-f0-9]{16}")
+                && deviceToken().length() >= 20;
+    }
+
+    static boolean validManagementUrl(String v) {
+        if (v == null) return false;
+        String s = v.trim();
+        if (!s.startsWith("https://") && !s.startsWith("http://127.0.0.1:")
+                && !s.startsWith("http://10.") && !s.startsWith("http://192.168.")
+                && !s.startsWith("http://172.")) return false;
+        try {
+            java.net.URL u = new java.net.URL(s);
+            int port = u.getPort();
+            if (port == -1) port = "https".equals(u.getProtocol()) ? 443 : 80;
+            if (port < 1 || port > 65535) return false;
+            String host = u.getHost();
+            return host != null && host.length() > 0 && !host.contains(" ");
+        } catch (Exception e) { return false; }
+    }
 
     private void put(String key, String value) {
         p.edit().putString(key, value == null ? "" : value).apply();

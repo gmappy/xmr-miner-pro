@@ -15,8 +15,9 @@ yet proven on the phone · **Planned** = no implementation yet.
 | GitHub repository | Working | Public repo created and pushed, GPL-3.0 at root. |
 | Genuine pool connection and accepted shares | Planned | Needs a public wallet address and a live pool test. |
 | Windows / Linux / macOS applications | Planned | No code yet. |
-| Web management dashboard | Planned | No code yet. |
-| Backend API + database | Planned | No code yet. |
+| Web management dashboard | Working (self-hosted) | Account, fleet overview, device detail, history chart, token rotation/removal. `dashboard/`. |
+| Backend API + database | Working (self-hosted) | Node 24 built-in SQLite, scrypt passwords, HMAC user tokens, hashed device tokens, plan limits. `backend/`, 15/15 smoke checks passed. |
+| Android → dashboard telemetry | Built, untested on device | Optional endpoint, ID and token in the app; sends real XMRig samples every 10 s plus a final stopped report. Needs a live run to verify. |
 | Subscription / payment integration | Planned | No code yet. |
 | Reproducible CI releases, signed release key | Planned | Prototype uses a generated dev key. |
 
@@ -28,6 +29,7 @@ yet proven on the phone · **Planned** = no implementation yet.
 - Keccak-256 empty-input digest matches the canonical value.
 - Known-good Monero address decodes to 69 bytes with version 0x12 and a matching 4-byte checksum.
 - Java compilation, dexing, packaging and APK signing all succeed.
+- Dashboard API smoke test: 15/15 checks (auth, plan limits, telemetry, history, token rotation, removal).
 
 ## Known blockers / risks
 
@@ -39,6 +41,7 @@ yet proven on the phone · **Planned** = no implementation yet.
    or testnet pool for the first end-to-end test.
 6. **Static musl DNS.** If pool hostnames fail, resolve in Java and pass an IP:port to XMRig.
 7. **GPL-3.0.** Source is included in the repository; release archives must include the license and notices.
+8. **Dashboard transport.** Use HTTPS (reverse proxy) before exposing it beyond localhost/LAN; device tokens must not cross the public internet in clear text.
 
 ## Next milestone
 

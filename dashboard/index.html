@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <title>XMR Miner Pro — Management</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> XMR MINER <strong>PRO</strong></div>
+    <div id="userbar" class="userbar hidden">
+      <span id="planBadge" class="badge">FREE</span>
+      <span id="userEmail" class="email"></span>
+      <button id="logoutBtn" class="ghost">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="authView" class="auth-card">
+      <h1>Manage your mining fleet</h1>
+      <p class="muted">Monitor real hashrate, shares and device health from one place. No wallet keys are stored here.</p>
+      <div class="tabs">
+        <button id="tabLogin" class="tab active">Sign in</button>
+        <button id="tabRegister" class="tab">Create account</button>
+      </div>
+      <form id="authForm" autocomplete="on">
+        <label>Email <input id="authEmail" type="email" required maxlength="254" autocomplete="email"></label>
+        <label>Password <input id="authPassword" type="password" required minlength="10" maxlength="200" autocomplete="current-password"></label>
+        <p id="authError" class="error"></p>
+        <button id="authSubmit" class="primary" type="submit">Sign in</button>
+      </form>
+      <p class="fineprint">Public wallet addresses stay on your devices. This dashboard only receives mining statistics you choose to send.</p>
+    </section>
+
+    <section id="appView" class="hidden">
+      <nav class="nav">
+        <button class="navbtn active" data-view="overview">Overview</button>
+        <button class="navbtn" data-view="devices">Devices</button>
+        <button class="navbtn" data-view="add">Add device</button>
+        <button class="navbtn" data-view="docs">Setup</button>
+      </nav>
+
+      <div id="view-overview" class="view">
+        <div class="cards">
+          <div class="card"><span class="label">Devices</span><strong id="statDevices">—</strong><span id="statLimit" class="sub"></span></div>
+          <div class="card"><span class="label">Online now</span><strong id="statOnline" class="green">—</strong><span class="sub">seen in last 3 min</span></div>
+          <div class="card"><span class="label">Combined hashrate</span><strong id="statHashrate" class="green">—</strong><span class="sub">real, reported by devices</span></div>
+          <div class="card"><span class="label">Accepted shares</span><strong id="statShares">—</strong><span class="sub">pool work, not XMR</span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Fleet status</h2><span id="lastUpdate" class="muted"></span></div>
+          <div id="fleetTable"></div>
+        </div>
+      </div>
+
+      <div id="view-devices" class="view hidden">
+        <div id="deviceList" class="device-grid"></div>
+        <div id="deviceDetail" class="panel hidden">
+          <div class="panel-head"><h2 id="detailName">Device</h2><button id="closeDetail" class="ghost">Close</button></div>
+          <div id="detailStats" class="detail-stats"></div>
+          <h3>Hashrate history</h3>
+          <div id="chart" class="chart"></div>
+          <div class="danger-row">
+            <button id="rotateBtn" class="ghost">Rotate device token</button>
+            <button id="removeBtn" class="danger">Remove device</button>
+          </div>
+          <p id="deviceMsg" class="muted"></p>
+        </div>
+      </div>
+
+      <div id="view-add" class="view hidden">
+        <div class="panel narrow">
+          <h2>Register a device</h2>
+          <p class="muted">This creates a unique device ID and token. Put them into the mining app on that device. The token is shown once — copy it now.</p>
+          <form id="addForm">
+            <label>Device name <input id="devName" required maxlength="60" placeholder="e.g. Phone — kitchen"></label>
+            <label>Platform
+              <select id="devPlatform">
+                <option value="android">Android</option>
+                <option value="windows">Windows</option>
+                <option value="linux">Linux</option>
+                <option value="macos">macOS</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <button class="primary" type="submit">Register device</button>
+          </form>
+          <div id="newDevice" class="new-device hidden"></div>
+        </div>
+      </div>
+
+      <div id="view-docs" class="view hidden">
+        <div class="panel">
+          <h2>How telemetry works</h2>
+          <ol class="docs">
+            <li>Register a device here and copy its ID and token.</li>
+            <li>Enter those in the mining app's Management settings. The app sends statistics only — never wallet keys.</li>
+            <li>The device POSTs to <code>/api/devices/{id}/telemetry</code> every 10 seconds with <code>Authorization: Bearer {token}</code>.</li>
+            <li>This dashboard polls the API every 5 seconds and displays only what devices actually report.</li>
+          </ol>
+          <p class="muted">Estimated rewards are never presented as balances. Confirm pool balances and wallet payouts on the pool and in your own wallet.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

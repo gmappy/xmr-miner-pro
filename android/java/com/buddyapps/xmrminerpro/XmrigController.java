@@ -32,6 +32,14 @@ final class XmrigController {
     private String stats = "Miner not running";
     private String lastError = "";
     private final StringBuilder log = new StringBuilder();
+    private volatile long lastSampleMs = 0;
+    private volatile double latestHashrate = -1;
+    private volatile double latestHashrateAvg = -1;
+    private volatile long latestAccepted = -1;
+    private volatile long latestRejected = -1;
+    private volatile long latestUptime = -1;
+    private volatile String latestPool = "";
+    private volatile boolean latestConnected = false;
 
     XmrigController(Context c) {
         app = c.getApplicationContext();
@@ -43,6 +51,13 @@ final class XmrigController {
     String lastError() { return lastError; }
     String log() { return log.toString(); }
 
+    /** Snapshot of the last real /1/summary response. Any unavailable value stays negative. */
+    synchronized TelemetrySample sample() {
+        return new TelemetrySample(latestHashrate, latestHashrateAvg, latestAccepted,
+                latestRejected, latestUptime, latestPool, latestConnected,
+                System.currentTimeMillis() - lastSampleMs < 15000);
+    }
+
     boolean supportedAbi() {
         if (Build.SUPPORTED_ABIS.length == 0) return false;
         return "arm64-v8a".equals(Build.SUPPORTED_ABIS[0]);
@@ -51,6 +66,7 @@ final class XmrigController {
     synchronized void start() throws IOException {
         if (isRunning()) return;
         lastError = "";
+        lastSampleMs = 0;
         if (!supportedAbi()) {
             throw new IOException("This build requires an ARM64 (arm64-v8a) device");
         }
@@ -121,6 +137,7 @@ final class XmrigController {
 
     synchronized void stop() {
         running = false;
+        lastSampleMs = 0;
         if (poller != null) poller.interrupt();
         if (process != null) {
             process.destroy();
@@ -205,6 +222,15 @@ final class XmrigController {
         long failures = (long) number(conn, "failures", -1);
         String algo = stringValue(json, "algo", "?");
         String version = stringValue(json, "version", "?");
+
+        latestHashrate = current;
+        latestHashrateAvg = avg;
+        latestAccepted = good;
+        latestRejected = (good < 0 || totalShares < 0) ? -1 : totalShares - good;
+        latestUptime = uptime;
+        latestPool = pool;
+        latestConnected = poolOkay(conn);
+        lastSampleMs = System.currentTimeMillis();
 
         StringBuilder b = new StringBuilder();
         b.append("Status: ").append(poolOkay(conn) ? "connected" : "connecting / offline").append('\n');
