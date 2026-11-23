@@ -1,0 +1,13 @@
+vendor/xmrig/build/
+vendor/xmrig-build/
+android/build/
+android/assets/xmrig
+android/assets/xmrig.sha256
+*.apk
+*.a
+*.o
+__pycache__/
+node_modules/
+.env
+*.keystore
+*.jks
